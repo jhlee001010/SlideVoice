@@ -1,7 +1,7 @@
 # ppt2video
 
-PPT/PDF 슬라이드 + 페이지별 대본을 오픈소스 TTS(Coqui XTTS v2)로 음성 합성해서
-자동으로 나레이션 영상(mp4)을 만들어주는 CLI 도구입니다.
+PPT/PDF 슬라이드 + 페이지별 대본을 오픈소스 TTS([Supertonic](https://pypi.org/project/supertonic/))로
+음성 합성해서 자동으로 나레이션 영상(mp4)을 만들어주는 CLI 도구입니다.
 
 ## 동작 방식
 
@@ -14,10 +14,9 @@ PPT/PDF 슬라이드 + 페이지별 대본을 오픈소스 TTS(Coqui XTTS v2)로
      - `.json`: 문자열 배열, 예) `["1페이지 대본", "2페이지 대본"]`
      - `.txt`: 페이지 사이를 `===`로 구분 (없으면 빈 줄 두 번으로 구분)
    - PDF 페이지 수와 대본 개수가 다르면 경고를 띄우고 짧은 쪽에 맞춥니다. 대본이 빈 페이지는 무음으로 처리됩니다.
-3. **TTS 음성 생성**: Coqui XTTS v2 모델로 각 페이지 대본을 음성으로 합성합니다.
-   - 한국어(`--lang ko`) 포함 다국어 지원.
-   - 목소리는 `--speaker-wav`(6초 이상의 참조 음성으로 목소리 클로닝) 또는
-     `--speaker`(내장 화자 이름, `--list-speakers`로 목록 확인)로 지정. 둘 다 없으면 내장 화자 중 첫 번째를 자동 사용.
+3. **TTS 음성 생성**: Supertonic(ONNX 기반 경량 오픈소스 TTS)으로 각 페이지 대본을 음성으로 합성합니다.
+   - 한국어(`--lang ko`) 포함 다국어 지원, CPU만으로도 빠르게 동작 (GPU/PyTorch 불필요).
+   - 목소리는 `--voice`로 지정 (`M1`~`M5`, `F1`~`F5`, 기본 `M1`). `--list-voices`로 목록 확인.
 4. **영상 합성**: 이미지 + 음성으로 페이지별 클립을 만든 뒤 순서대로 이어붙여 최종 mp4를 만듭니다.
 
 ## 설치
@@ -35,11 +34,11 @@ ffmpeg가 시스템 PATH에 있어야 합니다 (Windows: `winget install Gyan.F
 # PPTX 노트를 대본으로 자동 사용
 venv\Scripts\python ppt2video.py --pdf deck.pdf --pptx deck.pptx --out output.mp4
 
-# 대본을 별도 파일로 지정 + 목소리 클로닝
-venv\Scripts\python ppt2video.py --pdf deck.pdf --script script.json --speaker-wav my_voice.wav --out output.mp4
+# 대본을 별도 파일로 지정 + 목소리 선택
+venv\Scripts\python ppt2video.py --pdf deck.pdf --script script.json --voice F2 --out output.mp4
 
-# 내장 화자 목록 확인
-venv\Scripts\python ppt2video.py --list-speakers
+# 내장 목소리 목록 확인
+venv\Scripts\python ppt2video.py --list-voices
 ```
 
 ## 주요 옵션
@@ -50,12 +49,9 @@ venv\Scripts\python ppt2video.py --list-speakers
 | `--pptx` | 발표자 노트를 대본으로 자동 추출할 PPTX | - |
 | `--script` | 대본 파일 (.json / .txt) | - |
 | `--lang` | TTS 언어 코드 | `ko` |
-| `--speaker-wav` | 목소리 클로닝용 참조 음성 | - |
-| `--speaker` | XTTS 내장 화자 이름 | 자동(첫 번째) |
-| `--device` | `cpu` / `cuda` | 자동 감지 |
-| `--speed` | TTS 발화 속도 배율. 기본 모델(1.0)은 느리고 늘어지는 편이라 기본값을 올려둠 | `1.15` |
-| `--temperature` | 생성 다양성/표현력 (낮을수록 단조롭지만 안정적) | `0.65` |
-| `--repetition-penalty` | 같은 소리를 질질 끄는 것을 억제하는 강도 | `5.0` |
+| `--voice` | Supertonic 내장 목소리 (`M1`~`M5`, `F1`~`F5`) | `M1` |
+| `--speed` | TTS 발화 속도 배율 | `1.05` |
+| `--steps` | 합성 스텝 수. 높을수록 음질 좋지만 느림 | `8` |
 | `--pad` | 각 페이지 음성 뒤 여백(초) | `0.4` |
 | `--min-duration` | 대본 없는 페이지 노출 시간(초) | `1.2` |
 | `--width` | 렌더링 슬라이드 가로 해상도 | `1920` |
@@ -65,10 +61,8 @@ venv\Scripts\python ppt2video.py --list-speakers
 
 ## 참고 / 주의사항
 
-- **XTTS v2 모델 라이선스**: Coqui Public Model License(CPML)로, **비상업적 용도**로만 무료 사용 가능합니다.
-  상업적으로 쓰려면 별도 라이선스가 필요합니다. 첫 실행 시 모델(~2GB)이 자동 다운로드됩니다.
-- CPU만 있어도 동작하지만 GPU(CUDA)가 있으면 훨씬 빠릅니다.
-- 목소리 클로닝(`--speaker-wav`) 시 본인 목소리나 사용 권한이 있는 음성만 사용하세요.
+- 첫 실행 시 Supertonic 모델(수십MB, HuggingFace Hub)이 자동 다운로드되어 캐시됩니다.
+- CPU만으로도 충분히 빠르게 동작합니다 (ONNX Runtime 기반, PyTorch/GPU 불필요).
 
 ## 샘플로 테스트하기
 

@@ -114,51 +114,39 @@ def resolve_scripts(args, num_pages: int):
 # --------------------------------------------------------------------------
 
 class TtsEngine:
-    def __init__(self, language="ko", speaker_wav=None, speaker=None, device=None,
-                 speed=1.15, temperature=0.65, repetition_penalty=5.0):
-        os.environ.setdefault("COQUI_TOS_AGREED", "1")  # XTTS 라이선스(CPML, 비상업적 이용) 자동 동의
-        from TTS.api import TTS
-        import torch
+    """Supertonic (ONNX 기반 오픈소스 TTS) 래퍼. CPU만으로도 빠르고, 한국어 음질이 XTTS보다 자연스러움."""
 
-        if device is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-        eprint(f"[TTS] 모델 로딩 중 (device={device})... 최초 실행 시 모델 다운로드로 시간이 걸릴 수 있습니다.")
-        self.tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
+    def __init__(self, language="ko", voice="M1", speed=1.05, steps=8):
+        from supertonic import TTS
+
+        eprint("[TTS] Supertonic 모델 로딩 중... 최초 실행 시 모델 다운로드로 시간이 걸릴 수 있습니다.")
+        self.tts = TTS(auto_download=True)
         self.language = language
-        self.speaker_wav = speaker_wav
-        self.speaker = speaker
         self.speed = speed
-        self.temperature = temperature
-        self.repetition_penalty = repetition_penalty
+        self.steps = steps
 
-        if not speaker_wav and not speaker:
-            available = getattr(self.tts, "speakers", None)
-            if available:
-                self.speaker = available[0]
-                eprint(f"[TTS] --speaker-wav / --speaker 미지정 -> 기본 내장 화자 사용: {self.speaker}")
-            else:
-                eprint(
-                    "[TTS] 경고: 내장 화자를 찾을 수 없고 --speaker-wav 도 없습니다. "
-                    "음성 클로닝용 짧은 wav 샘플(6초 이상 권장)을 --speaker-wav 로 지정하세요."
-                )
+        if voice not in self.tts.voice_style_names:
+            eprint(
+                f"[TTS] 경고: '{voice}' 목소리를 찾을 수 없습니다. "
+                f"사용 가능: {', '.join(self.tts.voice_style_names)}. 첫 번째 목소리로 대체합니다."
+            )
+            voice = self.tts.voice_style_names[0]
+        self.voice = voice
+        self.voice_style = self.tts.get_voice_style(voice_name=voice)
+        eprint(f"[TTS] 목소리: {voice}")
 
     def synthesize(self, text: str, out_path: Path):
-        kwargs = dict(
+        wav, _duration = self.tts.synthesize(
             text=text,
-            language=self.language,
-            file_path=str(out_path),
+            lang=self.language,
+            voice_style=self.voice_style,
+            total_steps=self.steps,
             speed=self.speed,
-            temperature=self.temperature,
-            repetition_penalty=self.repetition_penalty,
         )
-        if self.speaker_wav:
-            kwargs["speaker_wav"] = self.speaker_wav
-        elif self.speaker:
-            kwargs["speaker"] = self.speaker
-        self.tts.tts_to_file(**kwargs)
+        self.tts.save_audio(wav, str(out_path))
 
-    def list_speakers(self):
-        return list(getattr(self.tts, "speakers", []) or [])
+    def list_voices(self):
+        return list(self.tts.voice_style_names)
 
 
 def make_silence(out_path: Path, duration: float = 1.2):
@@ -250,19 +238,16 @@ def build_arg_parser():
     p.add_argument("--script", required=False, help="페이지별 대본 파일 (.json 문자열 배열, 또는 '===' 로 페이지 구분한 .txt)")
     p.add_argument("--out", default="output.mp4", help="출력 영상 경로 (기본: output.mp4)")
     p.add_argument("--lang", default="ko", help="TTS 언어 코드 (기본: ko)")
-    p.add_argument("--speaker-wav", default=None, help="음성 클로닝용 참조 wav 파일 (6초 이상 권장)")
-    p.add_argument("--speaker", default=None, help="XTTS 내장 화자 이름 (--list-speakers 로 확인)")
-    p.add_argument("--device", default=None, choices=["cpu", "cuda"], help="TTS 실행 장치 (기본: 자동 감지)")
-    p.add_argument("--speed", type=float, default=1.15, help="TTS 발화 속도 배율. 1.0=기본(느리고 늘어짐), 클수록 빠름 (기본 1.15)")
-    p.add_argument("--temperature", type=float, default=0.65, help="TTS 생성 다양성/표현력 (기본 0.65, 낮을수록 안정적/단조로움)")
-    p.add_argument("--repetition-penalty", type=float, default=5.0, help="같은 소리 반복(질질 끄는 발음) 억제 강도 (기본 5.0)")
+    p.add_argument("--voice", default="M1", help="Supertonic 내장 목소리 이름: M1~M5, F1~F5 (기본 M1, --list-voices 로 확인)")
+    p.add_argument("--speed", type=float, default=1.05, help="TTS 발화 속도 배율 (기본 1.05)")
+    p.add_argument("--steps", type=int, default=8, help="Supertonic 합성 스텝 수. 높을수록 음질은 좋지만 느림 (기본 8)")
     p.add_argument("--pad", type=float, default=0.4, help="각 페이지 음성 뒤 여백(초) (기본 0.4)")
     p.add_argument("--min-duration", type=float, default=1.2, help="대본이 빈 페이지의 노출 시간(초) (기본 1.2)")
     p.add_argument("--width", type=int, default=1920, help="렌더링할 슬라이드 이미지 가로 픽셀 (기본 1920)")
     p.add_argument("--fps", type=int, default=25, help="출력 영상 fps (기본 25)")
     p.add_argument("--workdir", default="build", help="중간 산출물(이미지/오디오/클립) 저장 폴더 (기본: build)")
     p.add_argument("--keep-temp", action="store_true", help="완료 후 중간 산출물을 지우지 않음")
-    p.add_argument("--list-speakers", action="store_true", help="XTTS 내장 화자 목록만 출력하고 종료")
+    p.add_argument("--list-voices", action="store_true", help="Supertonic 내장 목소리 목록만 출력하고 종료")
     return p
 
 
@@ -276,9 +261,9 @@ def main():
     args = build_arg_parser().parse_args()
     check_ffmpeg()
 
-    if args.list_speakers:
-        engine = TtsEngine(language=args.lang, device=args.device)
-        for name in engine.list_speakers():
+    if args.list_voices:
+        engine = TtsEngine(language=args.lang)
+        for name in engine.list_voices():
             print(name)
         return
 
@@ -313,12 +298,9 @@ def main():
             if engine is None:
                 engine = TtsEngine(
                     language=args.lang,
-                    speaker_wav=args.speaker_wav,
-                    speaker=args.speaker,
-                    device=args.device,
+                    voice=args.voice,
                     speed=args.speed,
-                    temperature=args.temperature,
-                    repetition_penalty=args.repetition_penalty,
+                    steps=args.steps,
                 )
             print(f"  - {page_no}/{len(image_paths)} 페이지 TTS 생성 중... ({text[:20]}...)")
             engine.synthesize(text, raw_wav)
