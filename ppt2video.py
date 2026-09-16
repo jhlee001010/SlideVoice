@@ -114,7 +114,8 @@ def resolve_scripts(args, num_pages: int):
 # --------------------------------------------------------------------------
 
 class TtsEngine:
-    def __init__(self, language="ko", speaker_wav=None, speaker=None, device=None):
+    def __init__(self, language="ko", speaker_wav=None, speaker=None, device=None,
+                 speed=1.15, temperature=0.65, repetition_penalty=5.0):
         os.environ.setdefault("COQUI_TOS_AGREED", "1")  # XTTS 라이선스(CPML, 비상업적 이용) 자동 동의
         from TTS.api import TTS
         import torch
@@ -126,6 +127,9 @@ class TtsEngine:
         self.language = language
         self.speaker_wav = speaker_wav
         self.speaker = speaker
+        self.speed = speed
+        self.temperature = temperature
+        self.repetition_penalty = repetition_penalty
 
         if not speaker_wav and not speaker:
             available = getattr(self.tts, "speakers", None)
@@ -139,7 +143,14 @@ class TtsEngine:
                 )
 
     def synthesize(self, text: str, out_path: Path):
-        kwargs = dict(text=text, language=self.language, file_path=str(out_path))
+        kwargs = dict(
+            text=text,
+            language=self.language,
+            file_path=str(out_path),
+            speed=self.speed,
+            temperature=self.temperature,
+            repetition_penalty=self.repetition_penalty,
+        )
         if self.speaker_wav:
             kwargs["speaker_wav"] = self.speaker_wav
         elif self.speaker:
@@ -242,6 +253,9 @@ def build_arg_parser():
     p.add_argument("--speaker-wav", default=None, help="음성 클로닝용 참조 wav 파일 (6초 이상 권장)")
     p.add_argument("--speaker", default=None, help="XTTS 내장 화자 이름 (--list-speakers 로 확인)")
     p.add_argument("--device", default=None, choices=["cpu", "cuda"], help="TTS 실행 장치 (기본: 자동 감지)")
+    p.add_argument("--speed", type=float, default=1.15, help="TTS 발화 속도 배율. 1.0=기본(느리고 늘어짐), 클수록 빠름 (기본 1.15)")
+    p.add_argument("--temperature", type=float, default=0.65, help="TTS 생성 다양성/표현력 (기본 0.65, 낮을수록 안정적/단조로움)")
+    p.add_argument("--repetition-penalty", type=float, default=5.0, help="같은 소리 반복(질질 끄는 발음) 억제 강도 (기본 5.0)")
     p.add_argument("--pad", type=float, default=0.4, help="각 페이지 음성 뒤 여백(초) (기본 0.4)")
     p.add_argument("--min-duration", type=float, default=1.2, help="대본이 빈 페이지의 노출 시간(초) (기본 1.2)")
     p.add_argument("--width", type=int, default=1920, help="렌더링할 슬라이드 이미지 가로 픽셀 (기본 1920)")
@@ -302,6 +316,9 @@ def main():
                     speaker_wav=args.speaker_wav,
                     speaker=args.speaker,
                     device=args.device,
+                    speed=args.speed,
+                    temperature=args.temperature,
+                    repetition_penalty=args.repetition_penalty,
                 )
             print(f"  - {page_no}/{len(image_paths)} 페이지 TTS 생성 중... ({text[:20]}...)")
             engine.synthesize(text, raw_wav)

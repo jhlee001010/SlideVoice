@@ -53,6 +53,9 @@ venv\Scripts\python ppt2video.py --list-speakers
 | `--speaker-wav` | 목소리 클로닝용 참조 음성 | - |
 | `--speaker` | XTTS 내장 화자 이름 | 자동(첫 번째) |
 | `--device` | `cpu` / `cuda` | 자동 감지 |
+| `--speed` | TTS 발화 속도 배율. 기본 모델(1.0)은 느리고 늘어지는 편이라 기본값을 올려둠 | `1.15` |
+| `--temperature` | 생성 다양성/표현력 (낮을수록 단조롭지만 안정적) | `0.65` |
+| `--repetition-penalty` | 같은 소리를 질질 끄는 것을 억제하는 강도 | `5.0` |
 | `--pad` | 각 페이지 음성 뒤 여백(초) | `0.4` |
 | `--min-duration` | 대본 없는 페이지 노출 시간(초) | `1.2` |
 | `--width` | 렌더링 슬라이드 가로 해상도 | `1920` |
