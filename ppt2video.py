@@ -17,7 +17,7 @@ ppt2video: PPT/PDF 슬라이드 + 페이지별 대본 -> TTS 음성 -> 영상(mp
 
 import argparse
 import json
-import os
+import re
 import shutil
 import subprocess
 import sys
@@ -191,10 +191,27 @@ def resolve_scripts(args, num_pages: int):
 # 3. TTS
 # --------------------------------------------------------------------------
 
+def split_sentences(text: str) -> list:
+    """줄바꿈과 문장부호(. ! ?)를 기준으로 문장 단위로 나눈다.
+    Supertonic은 짧은 문장 여러 개를 한 덩어리로 묶어 한 번에 읽어버려서
+    문장 사이에 쉬는 구간이 안 생기는데, 문장을 미리 잘라 각각 합성한 뒤
+    그 사이에 무음을 넣어 자연스러운 호흡을 만들기 위함."""
+    sentences = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        for part in re.split(r"(?<=[.!?])\s+", line):
+            part = part.strip()
+            if part:
+                sentences.append(part)
+    return sentences or [text.strip()]
+
+
 class TtsEngine:
     """Supertonic (ONNX 기반 오픈소스 TTS) 래퍼. CPU만으로도 빠르고, 한국어 음질이 XTTS보다 자연스러움."""
 
-    def __init__(self, language="ko", voice="M1", speed=1.05, steps=8):
+    def __init__(self, language="ko", voice="M1", speed=1.05, steps=8, sentence_pause=0.4):
         from supertonic import TTS
 
         eprint("[TTS] Supertonic 모델 로딩 중... 최초 실행 시 모델 다운로드로 시간이 걸릴 수 있습니다.")
@@ -202,6 +219,7 @@ class TtsEngine:
         self.language = language
         self.speed = speed
         self.steps = steps
+        self.sentence_pause = sentence_pause
 
         if voice not in self.tts.voice_style_names:
             eprint(
@@ -214,14 +232,28 @@ class TtsEngine:
         eprint(f"[TTS] 목소리: {voice}")
 
     def synthesize(self, text: str, out_path: Path):
-        wav, _duration = self.tts.synthesize(
-            text=text,
-            lang=self.language,
-            voice_style=self.voice_style,
-            total_steps=self.steps,
-            speed=self.speed,
-        )
-        self.tts.save_audio(wav, str(out_path))
+        import numpy as np
+        import soundfile as sf
+
+        sample_rate = self.tts.sample_rate
+        silence = np.zeros(int(sample_rate * self.sentence_pause), dtype=np.float32)
+
+        sentences = split_sentences(text)
+        pieces = []
+        for i, sentence in enumerate(sentences):
+            wav, _duration = self.tts.synthesize(
+                text=sentence,
+                lang=self.language,
+                voice_style=self.voice_style,
+                total_steps=self.steps,
+                speed=self.speed,
+            )
+            pieces.append(np.asarray(wav).squeeze().astype(np.float32))
+            if i != len(sentences) - 1:
+                pieces.append(silence)
+
+        full = np.concatenate(pieces)
+        sf.write(str(out_path), full, sample_rate)
 
     def list_voices(self):
         return list(self.tts.voice_style_names)
@@ -319,6 +351,7 @@ def build_arg_parser():
     p.add_argument("--voice", default="M1", help="Supertonic 내장 목소리 이름: M1~M5, F1~F5 (기본 M1, --list-voices 로 확인)")
     p.add_argument("--speed", type=float, default=1.05, help="TTS 발화 속도 배율 (기본 1.05)")
     p.add_argument("--steps", type=int, default=8, help="Supertonic 합성 스텝 수. 높을수록 음질은 좋지만 느림 (기본 8)")
+    p.add_argument("--sentence-pause", type=float, default=0.4, help="한 페이지 안에서 문장과 문장 사이 쉬는 시간(초) (기본 0.4)")
     p.add_argument("--pad", type=float, default=0.4, help="각 페이지 음성 뒤 여백(초) (기본 0.4)")
     p.add_argument("--min-duration", type=float, default=1.2, help="대본이 빈 페이지의 노출 시간(초) (기본 1.2)")
     p.add_argument("--width", type=int, default=1920, help="렌더링할 슬라이드 이미지 가로 픽셀 (기본 1920)")
@@ -392,6 +425,7 @@ def main():
                     voice=args.voice,
                     speed=args.speed,
                     steps=args.steps,
+                    sentence_pause=args.sentence_pause,
                 )
             print(f"  - {page_no}/{len(image_paths)} 페이지 TTS 생성 중... ({text[:20]}...)")
             engine.synthesize(text, raw_wav)
