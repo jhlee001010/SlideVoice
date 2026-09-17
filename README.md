@@ -65,11 +65,13 @@ venv\Scripts\pip install -r requirements.txt
 
 ### 5단계. 영상으로 만들 슬라이드 준비
 
-1. PowerPoint에서 만든 발표 파일을 엽니다.
-2. **파일 > 내보내기 > PDF/XPS 만들기**로 PDF로 저장합니다. (예: `deck.pdf`)
-3. 원본 `.pptx` 파일도 그대로 같은 폴더에 둡니다. (예: `deck.pptx`)
-   - 슬라이드 노트(발표자 노트)에 각 페이지 대본을 미리 적어두면 자동으로 읽어옵니다.
-   - 노트 대신 대본을 직접 텍스트로 넣고 싶다면 6단계 참고.
+만든 `.pptx` 파일을 `SlideVoice` 폴더 안에 복사해 넣습니다. (예: `deck.pptx`)
+
+- **PDF는 따로 안 만들어도 됩니다.** `--pptx`만 주면 설치된 PowerPoint로 자동으로 PDF를 만들어서 씁니다.
+  (Windows + PowerPoint 설치가 되어 있어야 합니다. 둘 다 이 PC에는 이미 있습니다.)
+- 슬라이드 노트(발표자 노트)에 각 페이지 대본을 미리 적어두면 자동으로 읽어옵니다.
+- 노트 대신 대본을 직접 텍스트로 넣고 싶다면 6단계 참고.
+- PDF를 직접 준비하고 싶다면 PowerPoint에서 **파일 > 내보내기 > PDF/XPS 만들기**로 저장한 뒤 `--pdf`로 지정해도 됩니다 (변환 시간을 아낄 수 있음).
 
 ### 6단계 (선택). 대본을 별도 파일로 직접 쓰고 싶다면
 
@@ -84,17 +86,19 @@ PPTX 노트를 안 쓰고 싶으면 `script.json` 같은 파일을 만들어서 
 
 ### 7단계. 실행!
 
-PPTX 노트를 대본으로 쓰는 경우:
+PPTX 노트를 대본으로 쓰는 경우 (PDF 자동 변환):
 
 ```powershell
-venv\Scripts\python ppt2video.py --pdf deck.pdf --pptx deck.pptx --out output.mp4
+venv\Scripts\python ppt2video.py --pptx deck.pptx --out output.mp4
 ```
 
 직접 쓴 대본 파일(`script.json`)을 쓰는 경우:
 
 ```powershell
-venv\Scripts\python ppt2video.py --pdf deck.pdf --script script.json --out output.mp4
+venv\Scripts\python ppt2video.py --pptx deck.pptx --script script.json --out output.mp4
 ```
+
+PDF를 이미 직접 만들어뒀다면 `--pdf deck.pdf`를 추가로 지정하면 변환을 건너뛰고 더 빠르게 실행됩니다.
 
 실행하는 동안 화면에 `[1/4] ... [2/4] ... [3/4] ... [4/4] ...` 진행 상황이 나오고,
 끝나면 같은 폴더에 `output.mp4`가 생성됩니다.
@@ -133,6 +137,7 @@ venv\Scripts\python ppt2video.py --list-voices
 ## 동작 방식 (참고)
 
 1. **슬라이드 이미지**: `--pdf`로 준 PDF의 각 페이지를 이미지로 렌더링합니다.
+   `--pdf` 없이 `--pptx`만 주면 설치된 PowerPoint로 자동으로 PDF를 만들어 사용합니다 (Windows + PowerPoint 필요).
 2. **페이지별 대본**: `--pptx`(슬라이드 노트 자동 추출) 또는 `--script`(별도 파일) 중 하나로 지정합니다.
    - `.json`: 문자열 배열, 예) `["1페이지 대본", "2페이지 대본"]`
    - `.txt`: 페이지 사이를 `===`로 구분 (없으면 빈 줄 두 번으로 구분)
@@ -145,8 +150,8 @@ venv\Scripts\python ppt2video.py --list-voices
 
 | 옵션 | 설명 | 기본값 |
 |---|---|---|
-| `--pdf` | 슬라이드 이미지 소스 PDF (필수) | - |
-| `--pptx` | 발표자 노트를 대본으로 자동 추출할 PPTX | - |
+| `--pdf` | 슬라이드 이미지 소스 PDF. 없으면 `--pptx`로 자동 변환 | - |
+| `--pptx` | 원본 PPTX. 노트를 대본으로 자동 추출하거나, `--pdf` 없을 때 PDF 자동 변환용으로 사용 | - |
 | `--script` | 대본 파일 (.json / .txt) | - |
 | `--out` | 출력 영상 경로 | `output.mp4` |
 | `--lang` | TTS 언어 코드 | `ko` |

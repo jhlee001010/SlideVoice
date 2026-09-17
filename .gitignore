@@ -1,10 +1,12 @@
 venv/
 build/
 build_test/
+build_test2/
 __pycache__/
 *.pyc
-pip_install_log.txt
+pip_*_log.txt
+smoke_test*_log.txt
 sample/test.pdf
-sample/test_output.mp4
+sample/test.pptx
 *.mp4
 !sample/demo.mp4

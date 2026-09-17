@@ -2,3 +2,4 @@ python-pptx
 pymupdf
 tqdm
 supertonic
+pywin32; sys_platform == "win32"  # PPTX -> PDF 자동 변환용 (설치된 PowerPoint 자동화)

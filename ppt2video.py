@@ -5,10 +5,11 @@ ppt2video: PPT/PDF 슬라이드 + 페이지별 대본 -> TTS 음성 -> 영상(mp
 사용 흐름
 ---------
 1. PDF 파일에서 각 페이지를 이미지로 렌더링한다 (슬라이드 비주얼).
+   --pdf 없이 --pptx만 주면, 설치된 PowerPoint로 자동으로 PDF를 만든다 (Windows + PowerPoint 필요).
 2. 페이지별 대본을 얻는다:
    - --pptx 로 원본 PPTX를 주면 슬라이드 노트(발표자 노트)를 자동 추출
    - 또는 --script 로 별도 텍스트/JSON 파일을 지정
-3. 대본을 오픈소스 TTS(Coqui XTTS v2)로 음성 합성한다.
+3. 대본을 오픈소스 TTS(Supertonic)로 음성 합성한다.
 4. 이미지 + 음성으로 페이지별 클립을 만들고, 순서대로 이어붙여 최종 영상을 만든다.
 
 필요 프로그램: ffmpeg (PATH에 있어야 함)
@@ -25,6 +26,47 @@ from pathlib import Path
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+
+# --------------------------------------------------------------------------
+# 0. PPTX -> PDF (설치된 PowerPoint 이용, Windows 전용)
+# --------------------------------------------------------------------------
+
+def convert_pptx_to_pdf(pptx_path: Path, pdf_path: Path):
+    try:
+        import win32com.client
+    except ImportError:
+        eprint(
+            "오류: PPTX -> PDF 자동 변환에는 pywin32가 필요합니다. "
+            "'venv\\Scripts\\pip install pywin32' 로 설치하거나, "
+            "PowerPoint에서 직접 '내보내기 > PDF로 만들기' 후 --pdf 로 지정하세요."
+        )
+        sys.exit(1)
+
+    pptx_path = pptx_path.resolve()
+    pdf_path = pdf_path.resolve()
+    pdf_path.parent.mkdir(parents=True, exist_ok=True)
+
+    eprint(f"[변환] PowerPoint로 '{pptx_path.name}' -> PDF 변환 중...")
+    powerpoint = win32com.client.Dispatch("PowerPoint.Application")
+    try:
+        presentation = powerpoint.Presentations.Open(
+            str(pptx_path), ReadOnly=True, Untitled=False, WithWindow=False
+        )
+        try:
+            presentation.SaveAs(str(pdf_path), 32)  # 32 = ppSaveAsPDF
+        finally:
+            presentation.Close()
+    except Exception as e:
+        eprint(
+            "오류: PowerPoint 자동화로 PDF 변환에 실패했습니다. "
+            "PowerPoint에서 직접 '내보내기 > PDF로 만들기' 후 --pdf 로 지정해 주세요. "
+            f"(상세: {e})"
+        )
+        sys.exit(1)
+    finally:
+        powerpoint.Quit()
+    eprint(f"[변환] 완료: {pdf_path}")
 
 
 # --------------------------------------------------------------------------
@@ -267,8 +309,8 @@ def main():
             print(name)
         return
 
-    if not args.pdf:
-        eprint("오류: --pdf 는 필수입니다 (슬라이드 이미지 소스).")
+    if not args.pdf and not args.pptx:
+        eprint("오류: --pdf 또는 --pptx 중 하나는 반드시 지정해야 합니다.")
         sys.exit(1)
 
     workdir = Path(args.workdir)
@@ -278,8 +320,13 @@ def main():
     for d in (img_dir, audio_dir, clip_dir):
         d.mkdir(parents=True, exist_ok=True)
 
+    pdf_path = Path(args.pdf) if args.pdf else workdir / "converted.pdf"
+    if not args.pdf:
+        print("[0/4] --pdf 없음 -> PowerPoint로 PPTX를 PDF로 자동 변환 중...")
+        convert_pptx_to_pdf(Path(args.pptx), pdf_path)
+
     print("[1/4] PDF 페이지를 이미지로 렌더링 중...")
-    image_paths = render_pdf_pages(Path(args.pdf), img_dir, target_width=args.width)
+    image_paths = render_pdf_pages(pdf_path, img_dir, target_width=args.width)
     print(f"  -> {len(image_paths)} 페이지")
 
     print("[2/4] 대본 확보 중...")
