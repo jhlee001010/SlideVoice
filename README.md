@@ -5,6 +5,11 @@ PPT/PDF 슬라이드 + 페이지별 대본을 오픈소스 TTS([Supertonic](http
 
 Windows / macOS / Linux(WSL 포함) 어디서나 실행할 수 있습니다. **아래에서 본인 OS 섹션만 따라가면 됩니다.**
 
+> **대본(슬라이드 노트 / script.json) 작성 시 꼭 지켜주세요: 반드시 한국어로만 쓰세요.**
+> 영어 단어나 전문용어를 원문 그대로 섞어 쓰면 한국어 TTS가 발음을 이상하게 뭉개서 읽습니다.
+> 영어 용어는 **한글 발음 그대로 표기**하세요.
+> 예) `Transformer` → `트랜스포머`, `Attention` → `어텐션`, `Feed-Forward Network` → `피드포워드 네트워크`, `Encoder-Decoder` → `인코더-디코더`
+
 ---
 
 ## Windows
@@ -62,7 +67,7 @@ venv\Scripts\pip install -r requirements.txt
 
 만든 `.pptx` 파일을 `SlideVoice` 폴더 **바로 안에** 복사해 넣습니다. (예: `deck.pptx`)
 
-- 슬라이드 노트(발표자 노트)에 각 페이지 대본을 미리 적어두면 자동으로 읽어옵니다.
+- 슬라이드 노트(발표자 노트)에 각 페이지 대본을 미리 적어두면 자동으로 읽어옵니다. **대본은 한국어로만 쓰고, 영어 용어는 한글 발음으로 표기하세요** (위 안내 참고).
 - 노트 대신 대본을 직접 텍스트로 넣고 싶다면 7단계 참고.
 
 ### 7단계 (선택). 대본을 별도 파일로 쓰고 싶다면
@@ -177,7 +182,7 @@ sudo apt install libreoffice
 
 만든 `.pptx` 파일을 `SlideVoice` 폴더 **바로 안에** 복사해 넣습니다. (예: `deck.pptx`)
 
-- 슬라이드 노트(발표자 노트)에 각 페이지 대본을 미리 적어두면 자동으로 읽어옵니다.
+- 슬라이드 노트(발표자 노트)에 각 페이지 대본을 미리 적어두면 자동으로 읽어옵니다. **대본은 한국어로만 쓰고, 영어 용어는 한글 발음으로 표기하세요** (위 안내 참고).
 - 노트 대신 대본을 직접 텍스트로 넣고 싶다면 7단계 참고.
 
 ### 7단계 (선택). 대본을 별도 파일로 쓰고 싶다면
@@ -231,7 +236,7 @@ ppt2video.py --pptx deck.pptx --out output.mp4 --voice F2
 ppt2video.py --list-voices
 ```
 
-(`M1`~`M5`: 남성 목소리 5종, `F1`~`F5`: 여성 목소리 5종. 실행할 때는 위처럼 앞에 `venv\Scripts\python`(Windows) 또는 `venv/bin/python`(macOS/Linux)을 붙이세요.)
+(`M1~M5`: 남성 목소리 5종, `F1~F5`: 여성 목소리 5종. 실행할 때는 위처럼 앞에 `venv\Scripts\python`(Windows) 또는 `venv/bin/python`(macOS/Linux)을 붙이세요.)
 
 ---
 
@@ -256,7 +261,7 @@ ppt2video.py --list-voices
 | `--script` | 대본 파일 (.json / .txt) | - |
 | `--out` | 출력 영상 경로 | `output.mp4` |
 | `--lang` | TTS 언어 코드 | `ko` |
-| `--voice` | Supertonic 내장 목소리 (`M1`~`M5`, `F1`~`F5`) | `M1` |
+| `--voice` | Supertonic 내장 목소리 (`M1~M5`, `F1~F5`) | `M1` |
 | `--speed` | TTS 발화 속도 배율 | `1.05` |
 | `--steps` | 합성 스텝 수. 높을수록 음질 좋지만 느림 | `8` |
 | `--pad` | 각 페이지 음성 뒤 여백(초) | `0.4` |
