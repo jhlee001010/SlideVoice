@@ -10,5 +10,6 @@ smoke_test*_log.txt
 # 절대 커밋하지 않음 - 공개 저장소에 남 발표자료가 올라가는 걸 방지
 sample/*.pdf
 sample/*.pptx
+sample/voices/
 *.mp4
 !sample/demo.mp4
