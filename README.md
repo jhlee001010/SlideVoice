@@ -3,77 +3,83 @@
 PPT/PDF 슬라이드 + 페이지별 대본을 오픈소스 TTS([Supertonic](https://pypi.org/project/supertonic/))로
 음성 합성해서 자동으로 나레이션 영상(mp4)을 만들어주는 CLI 도구입니다.
 
+Windows / macOS / Linux(WSL 포함) 어디서나 실행할 수 있습니다.
+
 ---
 
 ## 실행하는 법 (처음부터 순서대로)
 
-### 0단계. 준비물
-
-- Windows PC
-- PowerShell (윈도우에 기본 내장, 시작 메뉴에서 "PowerShell" 검색)
-- 인터넷 연결 (처음 한 번은 프로그램/모델 다운로드 필요)
+아래 명령어는 Windows(PowerShell) 기준이고, macOS/Linux에서 다른 부분은 각 단계에 따로 표시했습니다.
 
 ### 1단계. 이 저장소를 내 컴퓨터로 받기
 
-PowerShell을 열고 아래 명령어를 순서대로 입력합니다. (원하는 폴더로 이동한 뒤 실행하세요. 예: `cd C:\`)
+원하는 폴더로 이동한 뒤 실행하세요.
 
-```powershell
+```bash
 git clone https://github.com/jhlee001010/SlideVoice.git
 cd SlideVoice
 ```
 
 > git이 없다면 GitHub 페이지에서 "Code > Download ZIP"으로 받아서 압축을 풀어도 됩니다.
 
-### 2단계. Python 설치 확인
+### 2단계. Python 설치 확인 (3.9 이상)
 
-```powershell
+```bash
 python --version
 ```
 
-`Python 3.x.x` 같은 게 안 뜨고 오류가 나면, 아래 명령으로 설치합니다.
+없다면 설치:
 
-```powershell
-winget install -e --id Python.Python.3.12
-```
-
-설치 후에는 **PowerShell 창을 새로 열어야** 인식됩니다.
+- **Windows**: `winget install -e --id Python.Python.3.12` (설치 후 터미널을 새로 열어야 인식됨)
+- **macOS**: `brew install python`
+- **Ubuntu/WSL**: `sudo apt install python3 python3-venv python3-pip`
 
 ### 3단계. ffmpeg 설치 확인
 
-```powershell
+```bash
 ffmpeg -version
 ```
 
-오류가 나면 설치합니다.
+없다면 설치:
 
-```powershell
-winget install -e --id Gyan.FFmpeg
-```
-
-이것도 설치 후 **새 PowerShell 창**에서 진행하세요.
+- **Windows**: `winget install -e --id Gyan.FFmpeg` (설치 후 터미널을 새로 열어야 인식됨)
+- **macOS**: `brew install ffmpeg`
+- **Ubuntu/WSL**: `sudo apt install ffmpeg`
 
 ### 4단계. 가상환경 만들고 필요한 패키지 설치
 
 (SlideVoice 폴더 안에서 실행)
 
-```powershell
+```bash
 python -m venv venv
-venv\Scripts\pip install -r requirements.txt
 ```
+
+패키지 설치:
+
+- **Windows**: `venv\Scripts\pip install -r requirements.txt`
+- **macOS/Linux**: `venv/bin/pip install -r requirements.txt`
 
 몇 분 정도 걸릴 수 있습니다.
 
-### 5단계. 영상으로 만들 슬라이드 준비
+### 5단계. PPTX -> PDF 자동 변환 프로그램 확인 (PDF를 직접 안 만들 경우)
+
+`--pdf` 없이 `.pptx` 파일만 넘기면 자동으로 PDF로 변환해서 씁니다. 변환에 필요한 프로그램:
+
+- **Windows**: PowerPoint (Microsoft 365/Office)가 설치되어 있으면 자동으로 됩니다. 별도 설치 불필요.
+- **macOS/Linux(WSL 포함)**: LibreOffice가 필요합니다.
+  - Ubuntu/WSL: `sudo apt install libreoffice`
+  - macOS: `brew install --cask libreoffice`
+
+이미 PDF로 변환된 파일이 있다면 이 단계는 건너뛰고 `--pdf`로 바로 지정하면 됩니다.
+
+### 6단계. 영상으로 만들 슬라이드 준비
 
 만든 `.pptx` 파일을 `SlideVoice` 폴더 안에 복사해 넣습니다. (예: `deck.pptx`)
 
-- **PDF는 따로 안 만들어도 됩니다.** `--pptx`만 주면 설치된 PowerPoint로 자동으로 PDF를 만들어서 씁니다.
-  (Windows + PowerPoint 설치가 되어 있어야 합니다. 둘 다 이 PC에는 이미 있습니다.)
 - 슬라이드 노트(발표자 노트)에 각 페이지 대본을 미리 적어두면 자동으로 읽어옵니다.
-- 노트 대신 대본을 직접 텍스트로 넣고 싶다면 6단계 참고.
-- PDF를 직접 준비하고 싶다면 PowerPoint에서 **파일 > 내보내기 > PDF/XPS 만들기**로 저장한 뒤 `--pdf`로 지정해도 됩니다 (변환 시간을 아낄 수 있음).
+- 노트 대신 대본을 직접 텍스트로 넣고 싶다면 다음 단계 참고.
 
-### 6단계 (선택). 대본을 별도 파일로 직접 쓰고 싶다면
+### 7단계 (선택). 대본을 별도 파일로 직접 쓰고 싶다면
 
 PPTX 노트를 안 쓰고 싶으면 `script.json` 같은 파일을 만들어서 페이지 순서대로 대본을 적습니다.
 
@@ -84,18 +90,20 @@ PPTX 노트를 안 쓰고 싶으면 `script.json` 같은 파일을 만들어서 
 ]
 ```
 
-### 7단계. 실행!
+### 8단계. 실행!
+
+아래부터는 Windows는 `venv\Scripts\python`, macOS/Linux는 `venv/bin/python`으로 바꿔서 실행하세요.
 
 PPTX 노트를 대본으로 쓰는 경우 (PDF 자동 변환):
 
-```powershell
-venv\Scripts\python ppt2video.py --pptx deck.pptx --out output.mp4
+```bash
+venv/bin/python ppt2video.py --pptx deck.pptx --out output.mp4
 ```
 
 직접 쓴 대본 파일(`script.json`)을 쓰는 경우:
 
-```powershell
-venv\Scripts\python ppt2video.py --pptx deck.pptx --script script.json --out output.mp4
+```bash
+venv/bin/python ppt2video.py --pptx deck.pptx --script script.json --out output.mp4
 ```
 
 PDF를 이미 직접 만들어뒀다면 `--pdf deck.pdf`를 추가로 지정하면 변환을 건너뛰고 더 빠르게 실행됩니다.
@@ -103,16 +111,16 @@ PDF를 이미 직접 만들어뒀다면 `--pdf deck.pdf`를 추가로 지정하�
 실행하는 동안 화면에 `[1/4] ... [2/4] ... [3/4] ... [4/4] ...` 진행 상황이 나오고,
 끝나면 같은 폴더에 `output.mp4`가 생성됩니다.
 
-### 8단계 (선택). 먼저 샘플로 테스트해보기
+### 9단계 (선택). 먼저 샘플로 테스트해보기
 
 내 슬라이드 없이 미리 작동하는지만 확인하고 싶다면:
 
-```powershell
-venv\Scripts\python sample\make_test_pdf.py
-venv\Scripts\python ppt2video.py --pdf sample\test.pdf --script sample\script.json --out sample\test_output.mp4
+```bash
+venv/bin/python sample/make_test_pdf.py
+venv/bin/python ppt2video.py --pdf sample/test.pdf --script sample/script.json --out sample/test_output.mp4
 ```
 
-`sample\test_output.mp4`가 생기면 정상 작동하는 것입니다.
+`sample/test_output.mp4`가 생기면 정상 작동하는 것입니다.
 
 ---
 
@@ -120,14 +128,14 @@ venv\Scripts\python ppt2video.py --pdf sample\test.pdf --script sample\script.js
 
 기본 목소리는 `M1`입니다. 다른 목소리로 바꾸려면 `--voice` 옵션을 추가하세요.
 
-```powershell
-venv\Scripts\python ppt2video.py --pdf deck.pdf --pptx deck.pptx --out output.mp4 --voice F2
+```bash
+venv/bin/python ppt2video.py --pptx deck.pptx --out output.mp4 --voice F2
 ```
 
 사용 가능한 목소리 목록 보기:
 
-```powershell
-venv\Scripts\python ppt2video.py --list-voices
+```bash
+venv/bin/python ppt2video.py --list-voices
 ```
 
 (`M1`~`M5`: 남성 목소리 5종, `F1`~`F5`: 여성 목소리 5종)
@@ -137,7 +145,7 @@ venv\Scripts\python ppt2video.py --list-voices
 ## 동작 방식 (참고)
 
 1. **슬라이드 이미지**: `--pdf`로 준 PDF의 각 페이지를 이미지로 렌더링합니다.
-   `--pdf` 없이 `--pptx`만 주면 설치된 PowerPoint로 자동으로 PDF를 만들어 사용합니다 (Windows + PowerPoint 필요).
+   `--pdf` 없이 `--pptx`만 주면 자동으로 PDF를 만들어 사용합니다 (Windows: PowerPoint, macOS/Linux: LibreOffice).
 2. **페이지별 대본**: `--pptx`(슬라이드 노트 자동 추출) 또는 `--script`(별도 파일) 중 하나로 지정합니다.
    - `.json`: 문자열 배열, 예) `["1페이지 대본", "2페이지 대본"]`
    - `.txt`: 페이지 사이를 `===`로 구분 (없으면 빈 줄 두 번으로 구분)

@@ -29,10 +29,22 @@ def eprint(*args, **kwargs):
 
 
 # --------------------------------------------------------------------------
-# 0. PPTX -> PDF (설치된 PowerPoint 이용, Windows 전용)
+# 0. PPTX -> PDF (Windows: PowerPoint 자동화 / macOS·Linux(WSL 포함): LibreOffice)
 # --------------------------------------------------------------------------
 
 def convert_pptx_to_pdf(pptx_path: Path, pdf_path: Path):
+    pptx_path = pptx_path.resolve()
+    pdf_path = pdf_path.resolve()
+    pdf_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if sys.platform == "win32":
+        _convert_pptx_to_pdf_powerpoint(pptx_path, pdf_path)
+    else:
+        _convert_pptx_to_pdf_libreoffice(pptx_path, pdf_path)
+    eprint(f"[변환] 완료: {pdf_path}")
+
+
+def _convert_pptx_to_pdf_powerpoint(pptx_path: Path, pdf_path: Path):
     try:
         import win32com.client
     except ImportError:
@@ -42,10 +54,6 @@ def convert_pptx_to_pdf(pptx_path: Path, pdf_path: Path):
             "PowerPoint에서 직접 '내보내기 > PDF로 만들기' 후 --pdf 로 지정하세요."
         )
         sys.exit(1)
-
-    pptx_path = pptx_path.resolve()
-    pdf_path = pdf_path.resolve()
-    pdf_path.parent.mkdir(parents=True, exist_ok=True)
 
     eprint(f"[변환] PowerPoint로 '{pptx_path.name}' -> PDF 변환 중...")
     powerpoint = win32com.client.Dispatch("PowerPoint.Application")
@@ -66,7 +74,33 @@ def convert_pptx_to_pdf(pptx_path: Path, pdf_path: Path):
         sys.exit(1)
     finally:
         powerpoint.Quit()
-    eprint(f"[변환] 완료: {pdf_path}")
+
+
+def _convert_pptx_to_pdf_libreoffice(pptx_path: Path, pdf_path: Path):
+    import tempfile
+
+    soffice = shutil.which("soffice") or shutil.which("libreoffice")
+    if not soffice:
+        eprint(
+            "오류: PPTX -> PDF 자동 변환에는 LibreOffice가 필요합니다. "
+            "설치 후 다시 시도하거나(Ubuntu/WSL: sudo apt install libreoffice, "
+            "macOS: brew install --cask libreoffice), "
+            "PDF로 직접 변환해서 --pdf 로 지정하세요."
+        )
+        sys.exit(1)
+
+    eprint(f"[변환] LibreOffice로 '{pptx_path.name}' -> PDF 변환 중...")
+    with tempfile.TemporaryDirectory() as tmp:
+        result = subprocess.run(
+            [soffice, "--headless", "--convert-to", "pdf", "--outdir", tmp, str(pptx_path)],
+            capture_output=True,
+            text=True,
+        )
+        converted = Path(tmp) / (pptx_path.stem + ".pdf")
+        if result.returncode != 0 or not converted.exists():
+            eprint(f"오류: LibreOffice 변환에 실패했습니다.\n{result.stdout}\n{result.stderr}")
+            sys.exit(1)
+        shutil.copy(converted, pdf_path)
 
 
 # --------------------------------------------------------------------------
