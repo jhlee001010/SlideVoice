@@ -6,8 +6,9 @@ __pycache__/
 *.pyc
 pip_*_log.txt
 smoke_test*_log.txt
-sample/test.pdf
-sample/test.pptx
-sample/test_123.pptx
+# sample/ 안의 실제 슬라이드 파일(생성 스크립트로 만든 픽스처든, 테스트용으로 넣은 개인 파일이든)은
+# 절대 커밋하지 않음 - 공개 저장소에 남 발표자료가 올라가는 걸 방지
+sample/*.pdf
+sample/*.pptx
 *.mp4
 !sample/demo.mp4

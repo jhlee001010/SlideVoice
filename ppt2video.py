@@ -23,6 +23,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+AUDIO_SAMPLE_RATE = 44100  # 모든 오디오 클립을 이 값으로 통일해서 concat(-c copy) 시 샘플레이트 불일치로 인한 잡음/재생 오류를 방지
+
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -228,7 +230,7 @@ class TtsEngine:
 def make_silence(out_path: Path, duration: float = 1.2):
     subprocess.run(
         [
-            "ffmpeg", "-y", "-f", "lavfi", "-i", f"anullsrc=r=24000:cl=mono",
+            "ffmpeg", "-y", "-f", "lavfi", "-i", f"anullsrc=r={AUDIO_SAMPLE_RATE}:cl=mono",
             "-t", str(duration), str(out_path),
         ],
         check=True,
@@ -274,7 +276,7 @@ def make_page_clip(image_path: Path, audio_path: Path, out_path: Path, fps: int 
             "-loop", "1", "-i", str(image_path),
             "-i", str(audio_path),
             "-c:v", "libx264", "-tune", "stillimage",
-            "-c:a", "aac", "-b:a", "192k",
+            "-c:a", "aac", "-b:a", "192k", "-ar", str(AUDIO_SAMPLE_RATE), "-ac", "1",
             "-pix_fmt", "yuv420p",
             "-r", str(fps),
             "-shortest",
