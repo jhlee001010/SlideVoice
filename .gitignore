@@ -8,5 +8,6 @@ pip_*_log.txt
 smoke_test*_log.txt
 sample/test.pdf
 sample/test.pptx
+sample/test_123.pptx
 *.mp4
 !sample/demo.mp4

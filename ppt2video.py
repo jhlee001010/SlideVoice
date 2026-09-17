@@ -347,6 +347,14 @@ def main():
         eprint("오류: --pdf 또는 --pptx 중 하나는 반드시 지정해야 합니다.")
         sys.exit(1)
 
+    for label, value in (("--pdf", args.pdf), ("--pptx", args.pptx)):
+        if value and not Path(value).resolve().exists():
+            eprint(
+                f"오류: {label} 로 지정한 파일을 찾을 수 없습니다: {Path(value).resolve()}\n"
+                f"(현재 폴더: {Path.cwd()}) 파일 경로/이름을 다시 확인하세요."
+            )
+            sys.exit(1)
+
     workdir = Path(args.workdir)
     img_dir = workdir / "images"
     audio_dir = workdir / "audio"

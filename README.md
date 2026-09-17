@@ -3,85 +3,71 @@
 PPT/PDF 슬라이드 + 페이지별 대본을 오픈소스 TTS([Supertonic](https://pypi.org/project/supertonic/))로
 음성 합성해서 자동으로 나레이션 영상(mp4)을 만들어주는 CLI 도구입니다.
 
-Windows / macOS / Linux(WSL 포함) 어디서나 실행할 수 있습니다.
+Windows / macOS / Linux(WSL 포함) 어디서나 실행할 수 있습니다. **아래에서 본인 OS 섹션만 따라가면 됩니다.**
 
 ---
 
-## 실행하는 법 (처음부터 순서대로)
+## Windows
 
-아래 명령어는 Windows(PowerShell) 기준이고, macOS/Linux에서 다른 부분은 각 단계에 따로 표시했습니다.
+### 1단계. 저장소 받기
 
-### 1단계. 이 저장소를 내 컴퓨터로 받기
-
-원하는 폴더로 이동한 뒤 실행하세요.
-
-```bash
+```powershell
 git clone https://github.com/jhlee001010/SlideVoice.git
 cd SlideVoice
 ```
 
 > git이 없다면 GitHub 페이지에서 "Code > Download ZIP"으로 받아서 압축을 풀어도 됩니다.
 
-### 2단계. Python 설치 확인 (3.9 이상)
+### 2단계. Python 설치 확인
 
-```bash
+```powershell
 python --version
 ```
 
-없다면 설치:
+오류가 나면 설치 (설치 후 PowerShell 창을 새로 열어야 인식됨):
 
-- **Windows**: `winget install -e --id Python.Python.3.12` (설치 후 터미널을 새로 열어야 인식됨)
-- **macOS**: `brew install python`
-- **Ubuntu/WSL**: `sudo apt install python3 python3-venv python3-pip`
+```powershell
+winget install -e --id Python.Python.3.12
+```
 
 ### 3단계. ffmpeg 설치 확인
 
-```bash
+```powershell
 ffmpeg -version
 ```
 
-없다면 설치:
+오류가 나면 설치 (설치 후 PowerShell 창을 새로 열어야 인식됨):
 
-- **Windows**: `winget install -e --id Gyan.FFmpeg` (설치 후 터미널을 새로 열어야 인식됨)
-- **macOS**: `brew install ffmpeg`
-- **Ubuntu/WSL**: `sudo apt install ffmpeg`
+```powershell
+winget install -e --id Gyan.FFmpeg
+```
 
-### 4단계. 가상환경 만들고 필요한 패키지 설치
+### 4단계. 가상환경 만들고 패키지 설치
 
 (SlideVoice 폴더 안에서 실행)
 
-```bash
+```powershell
 python -m venv venv
+venv\Scripts\pip install -r requirements.txt
 ```
-
-패키지 설치:
-
-- **Windows**: `venv\Scripts\pip install -r requirements.txt`
-- **macOS/Linux**: `venv/bin/pip install -r requirements.txt`
 
 몇 분 정도 걸릴 수 있습니다.
 
-### 5단계. PPTX -> PDF 자동 변환 프로그램 확인 (PDF를 직접 안 만들 경우)
+### 5단계. PDF 자동 변환 프로그램 확인
 
-`--pdf` 없이 `.pptx` 파일만 넘기면 자동으로 PDF로 변환해서 씁니다. 변환에 필요한 프로그램:
+`--pdf` 없이 `.pptx` 파일만 넘기면 PowerPoint를 자동으로 실행해서 PDF로 변환합니다.
+**Microsoft 365/Office(PowerPoint)가 설치되어 있으면 별도 설치 없이 바로 됩니다.**
 
-- **Windows**: PowerPoint (Microsoft 365/Office)가 설치되어 있으면 자동으로 됩니다. 별도 설치 불필요.
-- **macOS/Linux(WSL 포함)**: LibreOffice가 필요합니다.
-  - Ubuntu/WSL: `sudo apt install libreoffice`
-  - macOS: `brew install --cask libreoffice`
+### 6단계. 슬라이드 파일 준비
 
-이미 PDF로 변환된 파일이 있다면 이 단계는 건너뛰고 `--pdf`로 바로 지정하면 됩니다.
-
-### 6단계. 영상으로 만들 슬라이드 준비
-
-만든 `.pptx` 파일을 `SlideVoice` 폴더 안에 복사해 넣습니다. (예: `deck.pptx`)
+만든 `.pptx` 파일을 `SlideVoice` 폴더 **바로 안에** 복사해 넣습니다. (예: `deck.pptx`)
 
 - 슬라이드 노트(발표자 노트)에 각 페이지 대본을 미리 적어두면 자동으로 읽어옵니다.
-- 노트 대신 대본을 직접 텍스트로 넣고 싶다면 다음 단계 참고.
+- 노트 대신 대본을 직접 텍스트로 넣고 싶다면 7단계 참고.
 
-### 7단계 (선택). 대본을 별도 파일로 직접 쓰고 싶다면
+### 7단계 (선택). 대본을 별도 파일로 쓰고 싶다면
 
-PPTX 노트를 안 쓰고 싶으면 `script.json` 같은 파일을 만들어서 페이지 순서대로 대본을 적습니다.
+PPTX 노트를 안 쓰고 싶으면 `script.json` 파일을 만들어서 페이지 순서대로 대본을 적습니다.
 
 ```json
 [
@@ -92,18 +78,14 @@ PPTX 노트를 안 쓰고 싶으면 `script.json` 같은 파일을 만들어서 
 
 ### 8단계. 실행!
 
-아래부터는 Windows는 `venv\Scripts\python`, macOS/Linux는 `venv/bin/python`으로 바꿔서 실행하세요.
-
-PPTX 노트를 대본으로 쓰는 경우 (PDF 자동 변환):
-
-```bash
-venv/bin/python ppt2video.py --pptx deck.pptx --out output.mp4
+```powershell
+venv\Scripts\python ppt2video.py --pptx deck.pptx --out output.mp4
 ```
 
-직접 쓴 대본 파일(`script.json`)을 쓰는 경우:
+별도 대본 파일을 쓰는 경우:
 
-```bash
-venv/bin/python ppt2video.py --pptx deck.pptx --script script.json --out output.mp4
+```powershell
+venv\Scripts\python ppt2video.py --pptx deck.pptx --script script.json --out output.mp4
 ```
 
 PDF를 이미 직접 만들어뒀다면 `--pdf deck.pdf`를 추가로 지정하면 변환을 건너뛰고 더 빠르게 실행됩니다.
@@ -111,9 +93,120 @@ PDF를 이미 직접 만들어뒀다면 `--pdf deck.pdf`를 추가로 지정하�
 실행하는 동안 화면에 `[1/4] ... [2/4] ... [3/4] ... [4/4] ...` 진행 상황이 나오고,
 끝나면 같은 폴더에 `output.mp4`가 생성됩니다.
 
+> **파일을 못 찾는다는 오류가 나면**: `--pptx`/`--pdf`로 준 파일이 지금 명령어를 실행하는 폴더 기준 경로에 없다는 뜻입니다.
+> 오류 메시지에 찍히는 절대경로를 보고 파일을 그 위치로 옮기거나, 경로를 정확히 적어주세요 (예: `sample\deck.pptx`).
+
 ### 9단계 (선택). 먼저 샘플로 테스트해보기
 
-내 슬라이드 없이 미리 작동하는지만 확인하고 싶다면:
+```powershell
+venv\Scripts\python sample\make_test_pdf.py
+venv\Scripts\python ppt2video.py --pdf sample\test.pdf --script sample\script.json --out sample\test_output.mp4
+```
+
+`sample\test_output.mp4`가 생기면 정상 작동하는 것입니다.
+
+---
+
+## macOS / Linux (WSL 포함)
+
+### 1단계. 저장소 받기
+
+```bash
+git clone https://github.com/jhlee001010/SlideVoice.git
+cd SlideVoice
+```
+
+### 2단계. Python 설치 확인
+
+```bash
+python3 --version
+```
+
+오류가 나면 설치:
+
+```bash
+# macOS
+brew install python
+
+# Ubuntu/WSL
+sudo apt install python3 python3-venv python3-pip
+```
+
+### 3단계. ffmpeg 설치 확인
+
+```bash
+ffmpeg -version
+```
+
+오류가 나면 설치:
+
+```bash
+# macOS
+brew install ffmpeg
+
+# Ubuntu/WSL
+sudo apt install ffmpeg
+```
+
+### 4단계. 가상환경 만들고 패키지 설치
+
+(SlideVoice 폴더 안에서 실행)
+
+```bash
+python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+```
+
+몇 분 정도 걸릴 수 있습니다.
+
+### 5단계. PDF 자동 변환 프로그램 설치 (LibreOffice)
+
+`--pdf` 없이 `.pptx` 파일만 넘기면 LibreOffice로 자동 변환합니다.
+
+```bash
+# macOS
+brew install --cask libreoffice
+
+# Ubuntu/WSL
+sudo apt install libreoffice
+```
+
+이미 PDF로 변환된 파일이 있다면 이 단계는 건너뛰고 `--pdf`로 바로 지정해도 됩니다.
+
+### 6단계. 슬라이드 파일 준비
+
+만든 `.pptx` 파일을 `SlideVoice` 폴더 **바로 안에** 복사해 넣습니다. (예: `deck.pptx`)
+
+- 슬라이드 노트(발표자 노트)에 각 페이지 대본을 미리 적어두면 자동으로 읽어옵니다.
+- 노트 대신 대본을 직접 텍스트로 넣고 싶다면 7단계 참고.
+
+### 7단계 (선택). 대본을 별도 파일로 쓰고 싶다면
+
+```json
+[
+  "1페이지에서 하고 싶은 말",
+  "2페이지에서 하고 싶은 말"
+]
+```
+
+### 8단계. 실행!
+
+```bash
+venv/bin/python ppt2video.py --pptx deck.pptx --out output.mp4
+```
+
+별도 대본 파일을 쓰는 경우:
+
+```bash
+venv/bin/python ppt2video.py --pptx deck.pptx --script script.json --out output.mp4
+```
+
+PDF를 이미 직접 만들어뒀다면 `--pdf deck.pdf`를 추가로 지정하면 변환을 건너뛰고 더 빠르게 실행됩니다.
+
+> **파일을 못 찾는다는 오류가 나면**: `--pptx`/`--pdf`로 준 파일이 지금 명령어를 실행하는 폴더 기준 경로에 없다는 뜻입니다.
+> 오류 메시지에 찍히는 절대경로를 보고 파일을 그 위치로 옮기거나, 경로를 정확히 적어주세요 (예: `sample/deck.pptx`).
+
+### 9단계 (선택). 먼저 샘플로 테스트해보기
 
 ```bash
 venv/bin/python sample/make_test_pdf.py
@@ -128,17 +221,17 @@ venv/bin/python ppt2video.py --pdf sample/test.pdf --script sample/script.json -
 
 기본 목소리는 `M1`입니다. 다른 목소리로 바꾸려면 `--voice` 옵션을 추가하세요.
 
-```bash
-venv/bin/python ppt2video.py --pptx deck.pptx --out output.mp4 --voice F2
+```
+ppt2video.py --pptx deck.pptx --out output.mp4 --voice F2
 ```
 
 사용 가능한 목소리 목록 보기:
 
-```bash
-venv/bin/python ppt2video.py --list-voices
+```
+ppt2video.py --list-voices
 ```
 
-(`M1`~`M5`: 남성 목소리 5종, `F1`~`F5`: 여성 목소리 5종)
+(`M1`~`M5`: 남성 목소리 5종, `F1`~`F5`: 여성 목소리 5종. 실행할 때는 위처럼 앞에 `venv\Scripts\python`(Windows) 또는 `venv/bin/python`(macOS/Linux)을 붙이세요.)
 
 ---
 
