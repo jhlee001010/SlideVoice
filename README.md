@@ -2,6 +2,18 @@
 
 PPT 또는 PDF 슬라이드와 발표 대본만 있으면, AI TTS 음성을 입힌 MP4 강의 영상을 자동으로 생성합니다.
 
+## 목차
+
+- [이 프로그램으로 할 수 있는 것](#이-프로그램으로-할-수-있는-것)
+- [가장 빠르게 사용하는 방법](#가장-빠르게-사용하는-방법)
+- [Windows](#windows)
+- [macOS / Linux (WSL 포함)](#macos--linux-wsl-포함)
+- [대본 작성 방법](#대본-작성-방법)
+- [목소리 바꾸기](#목소리-바꾸기)
+- [주요 옵션](#주요-옵션)
+- [동작 방식 (참고)](#동작-방식-참고)
+- [참고 / 주의사항](#참고--주의사항)
+
 ## 이 프로그램으로 할 수 있는 것
 
 - AI가 자연스러운 음성으로 발표 대본을 읽어주는 나레이션 영상을 만들어줍니다. 직접 마이크로 녹음할 필요가 없습니다.
@@ -39,6 +51,7 @@ git clone https://github.com/jhlee001010/SlideVoice.git
 cd SlideVoice
 ```
 
+> [!TIP]
 > git이 없다면 GitHub 페이지에서 "Code > Download ZIP"으로 받아서 압축을 풀어도 됩니다.
 
 ### 2단계. Python 설치 확인
@@ -79,7 +92,9 @@ venv\Scripts\pip install -r requirements.txt
 ### 5단계. PDF 자동 변환 프로그램 확인
 
 `--pdf` 없이 `.pptx` 파일만 넘기면 PowerPoint를 자동으로 실행해서 PDF로 변환합니다.
-**Microsoft 365/Office(PowerPoint)가 설치되어 있으면 별도 설치 없이 바로 됩니다.**
+
+> [!NOTE]
+> Microsoft 365/Office(PowerPoint)가 설치되어 있으면 별도 설치 없이 바로 됩니다.
 
 이미 PDF로 변환해둔 파일이 있다면 이 단계는 필요 없습니다 — `--pdf`로 바로 지정하면 이 자동 변환 과정 자체를 건너뛰어서 더 빠르게 실행됩니다 (아래 8단계 예시 참고).
 
@@ -110,6 +125,7 @@ venv\Scripts\python ppt2video.py --pdf deck.pdf --script script.json --out outpu
 실행하는 동안 화면에 `[1/4] ... [2/4] ... [3/4] ... [4/4] ...` 진행 상황이 나오고,
 끝나면 같은 폴더에 `output.mp4`가 생성됩니다.
 
+> [!WARNING]
 > **파일을 못 찾는다는 오류가 나면**: `--pptx`/`--pdf`로 준 파일이 지금 명령어를 실행하는 폴더 기준 경로에 없다는 뜻입니다.
 > 오류 메시지에 찍히는 절대경로를 보고 파일을 그 위치로 옮기거나, 경로를 정확히 적어주세요 (예: `sample\deck.pptx`).
 
@@ -214,6 +230,7 @@ PDF를 이미 직접 만들어뒀다면 `--pdf`로 지정하세요. PPTX → PDF
 venv/bin/python ppt2video.py --pdf deck.pdf --script script.json --out output.mp4
 ```
 
+> [!WARNING]
 > **파일을 못 찾는다는 오류가 나면**: `--pptx`/`--pdf`로 준 파일이 지금 명령어를 실행하는 폴더 기준 경로에 없다는 뜻입니다.
 > 오류 메시지에 찍히는 절대경로를 보고 파일을 그 위치로 옮기거나, 경로를 정확히 적어주세요 (예: `sample/deck.pptx`).
 
@@ -247,6 +264,7 @@ PPT 노트를 쓰지 않고 싶다면 `script.json` 파일을 만들어서 슬�
 ]
 ```
 
+> [!IMPORTANT]
 > **대본은 반드시 한국어로만 쓰세요.**
 > 영어 단어나 전문용어를 원문 그대로 섞어 쓰면 한국어 TTS가 발음을 이상하게 뭉개서 읽습니다.
 > 영어 용어는 **한글 발음 그대로 표기**하세요.
